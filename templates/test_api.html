@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>My Postpartum Tracker</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <style>
+
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      margin: 0;
+      padding: 20px;
+      color: #333;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1, h2 {
+      color: #3a6ea5;
+    }
+    
+    .symptom-button {
+      width: 110px;
+      height: 110px;
+      margin: 8px;
+      background-color: lightblue;
+      border: 1px solid gray;
+      border-radius: 10px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-weight: bold;
+      transition: all 0.2s ease;
+    }
+    .symptom-button:hover {
+      background-color: skyblue;
+      transform: scale(1.05);
+      box-shadow: 0 0 5px rgba(0,0,0,0.2);
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: center;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+    
+    #loading {
+      display: none;
+      color: #666;
+      font-style: italic;
+      text-align: center;
+      padding: 20px;
+    }
+    
+    /* Severity colors - blue shades 1-10 shading dark to light */
+    .severity-1 { background-color: #e6f2ff; } 
+    .severity-2 { background-color: #cce5ff; }
+    .severity-3 { background-color: #b3d9ff; }
+    .severity-4 { background-color: #99ccff; }
+    .severity-5 { background-color: #80bfff; }
+    .severity-6 { background-color: #66b3ff; }
+    .severity-7 { background-color: #4da6ff; }
+    .severity-8 { background-color: #3399ff; }
+    .severity-9 { background-color: #1a8cff; }
+    .severity-10 { background-color: #0080ff; } 
+    
+    /* Buttons */
+    .btn {
+      display: inline-block;
+      padding: 8px 16px;
+      margin-right: 5px;
+      margin-bottom: 5px;
+      background-color: #3a6ea5;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .btn:hover {
+      background-color: #2d5982;
+    }
+    
+    .modal-content {
+      border-radius: 6px;
+      border: none;
+    }
+    .modal-header {
+      background-color: #3a6ea5;
+      color: white;
+      border-radius: 5px 5px 0 0;
+    }
+    .modal-footer {
+      background-color: #f8f9fa;
+      border-radius: 0 0 5px 5px;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h2>Postpartum Health Tracker</h2>
+
+  <div id="loading">
+    <p>Loading data...</p>
+  </div>
+
+  <div style="margin-bottom: 20px; text-align: center;">
+    <div style="display: flex; flex-wrap: wrap; justify-content: center;">
+      <button class="symptom-button" onclick="logSymptom('abdominal-pain')">Abdominal Pain</button>
+      <button class="symptom-button" onclick="logSymptom('bleeding')">Bleeding</button>
+      <button class="symptom-button" onclick="logSymptom('headache')">Headache</button>
+      <button class="symptom-button" onclick="logSymptom('body-ache')">Body Ache</button>
+      <button class="symptom-button" onclick="logSymptom('leg-pain')">Leg Pain</button>
+      <button class="symptom-button" onclick="logSymptom('chest-pain')">Chest Pain</button>
+      <button class="symptom-button" onclick="logSymptom('breast-pain')">Breast Pain</button>
+      <button class="symptom-button" onclick="logSymptom('urination-discomfort')">Discomfort Urinating</button>
+      <button class="symptom-button" onclick="logSymptom('sadness')">Sadness</button>
+      <button class="symptom-button" onclick="logSymptom('anxiety')">Anxiety</button>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom: 20px;">
+    <div class="card-body">
+      <h5>Weekly Symptom Grid</h5>
+      <div style="overflow-x: auto;">
+        <table id="symptomGrid">
+          <tr>
+            <th>Symptom</th>
+            <th>Sunday</th>
+            <th>Monday</th>
+            <th>Tuesday</th>
+            <th>Wednesday</th>
+            <th>Thursday</th>
+            <th>Friday</th>
+            <th>Saturday</th>
+          </tr>
+        </table>
+      </div>
+      <p><small>Severity of symptoms scale (1-10)</small></p>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="symptomModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalSymptomName">Log Symptom</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <label>Severity (1-10):</label>
+        <input type="range" id="severityInput" min="1" max="10" value="5" style="width: 100%;">
+        <div style="text-align: center;" id="severityValue">5</div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="saveSymptom()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+var symptomModal; 
+var currentSymptom = ''; 
+var currentPatientId = null; 
+var token = sessionStorage.getItem('auth_token'); // login token
+
+// Symptoms list
+var symptomMap = {
+  'abdominal-pain': { code: '21522001', display: 'Abdominal Pain' },
+  'bleeding': { code: '386661006', display: 'Bleeding' },
+  'headache': { code: '25064002', display: 'Headache' },
+  'body-ache': { code: '10601006', display: 'Body Ache' },
+  'leg-pain': { code: '229373006', display: 'Leg Pain' },
+  'chest-pain': { code: '29857009', display: 'Chest Pain' },
+  'breast-pain': { code: '75879001', display: 'Breast Pain' },
+  'urination-discomfort': { code: '49650001', display: 'Discomfort Urinating' },
+  'sadness': { code: '35489007', display: 'Sadness' },
+  'anxiety': { code: '48694002', display: 'Anxiety' }
+};
+
+window.onload = function() {
+  var urlParams = new URLSearchParams(window.location.search);
+  var urlToken = urlParams.get('token');
+  if (urlToken) {
+    token = urlToken;
+    sessionStorage.setItem('auth_token', token);
+  }
+   
+  symptomModal = new bootstrap.Modal(document.getElementById('symptomModal'));
+  var slider = document.getElementById('severityInput');
+  var output = document.getElementById('severityValue');
+  slider.onchange = function() {
+    output.textContent = this.value;
+  };
+  slider.oninput = function() {
+    output.textContent = this.value;
+  };
+
+  setupGrid();
+  getPatientId();
+  setTimeout(getObservations, 1000); 
+};
+
+function setupGrid() {
+  var table = document.getElementById('symptomGrid');
+
+  for (var key in symptomMap) {
+    var symptom = symptomMap[key];
+    var row = table.insertRow();
+    var nameCell = row.insertCell();
+    nameCell.textContent = symptom.display;
+
+    for (var i = 0; i < 7; i++) {
+      var cell = row.insertCell();
+      cell.setAttribute('data-day', i);
+      cell.setAttribute('data-symptom', key);
+    }
+  }
+}
+
+// Data fetching from server
+function getPatientId() {
+  if (!token) return; 
+
+  document.getElementById('loading').style.display = 'block';
+
+  // requests server for patient info
+  fetch('/api/patients/', {
+    headers: { 'Authorization': 'Token ' + token }
+  })
+  .then(function(response) {
+    if (!response.ok) {
+      throw new Error('Failed to get patient data');
+    }
+    return response.json();
+  })
+  .then(function(patients) {
+    if (patients && patients.length > 0) {
+      currentPatientId = patients[0].id;
+    }
+  })
+  .catch(function(error) {
+    alert('Error loading patient data.');
+  })
+  .finally(function() {
+    document.getElementById('loading').style.display = 'none';
+  });
+}
+
+// symptom history 
+function getObservations() {
+  if (!token || !currentPatientId) return; // Skip if not logged in
+
+  document.getElementById('loading').style.display = 'block';
+
+  // Get dates for the week
+  var endDate = new Date();
+  var startDate = new Date();
+  startDate.setDate(startDate.getDate() - 7); // 7 days ago
+
+  // fetches observations)
+  fetch(
+    '/api/observations/?patient=' + currentPatientId +
+    '&start_date=' + startDate.toISOString() +
+    '&end_date=' + endDate.toISOString(),
+    { headers: { 'Authorization': 'Token ' + token } }
+  )
+  .then(function(response) {
+    return response.json();
+  })
+  .then(function(observations) {
+    // Fill the grid with the data
+    updateGrid(observations);
+  })
+  .catch(function(error) {
+    console.error(error);
+  })
+  .finally(function() {
+    document.getElementById('loading').style.display = 'none';
+  });
+}
+function updateGrid(observations) {
+
+  var cells = document.querySelectorAll('[data-day]');
+  for (var i = 0; i < cells.length; i++) {
+    cells[i].textContent = '';
+    cells[i].className = '';
+    cells[i].removeAttribute('data-id');
+    cells[i].onclick = null;
+  }
+
+  // For every observation choose day of week
+  for (var i = 0; i < observations.length; i++) {
+    var obs = observations[i];
+    var date = new Date(obs.effectiveDateTime || obs.effective_date_time);
+    var dayIndex = date.getDay(); // 0 = Sunday, 1 = Monday, etc.
+
+    // symptom coding from fhir formatting
+    var code = '';
+    if (obs.code && obs.code.coding && obs.code.coding[0]) {
+      code = obs.code.coding[0].code;
+    } else if (obs.code) {
+      code = obs.code;
+    }
+
+    var symptomKey = '';
+    for (var key in symptomMap) {
+      if (symptomMap[key].code === code) {
+        symptomKey = key;
+        break;
+      }
+    }
+
+    if (!symptomKey) continue;
+    // Get severity value from the FHIR format
+    var value = null;
+    if (obs.value_quantity !== undefined) {
+      value = obs.value_quantity;
+    } else if (obs.valueQuantity && obs.valueQuantity.value !== undefined) {
+      value = obs.valueQuantity.value;
+    }
+
+    if (value === null) continue;
+    value = Math.round(value);
+    var cell = document.querySelector('[data-day="' + dayIndex + '"][data-symptom="' + symptomKey + '"]');
+    if (cell) {
+      
+      cell.textContent = value;
+      cell.className = 'severity-' + value;
+      cell.setAttribute('data-id', obs.id);
+      
+      // Click to get severity levels scale
+      cell.onclick = function() {
+        var sympId = this.getAttribute('data-id');
+        var sympType = this.getAttribute('data-symptom');
+        var currentVal = parseInt(this.textContent);
+        
+        var newVal = currentVal >= 10 ? 1 : currentVal + 1;
+        this.textContent = newVal;
+        this.className = 'severity-' + newVal;
+        
+        // Creates data for sending to server
+        var data = {
+          status: 'final',
+          category: 'vital-signs',
+          code: symptomMap[sympType].code,
+          code_display: symptomMap[sympType].display,
+          value_quantity: parseFloat(newVal),
+          value_unit: '1-10',
+          effective_date_time: new Date().toISOString().split('.')[0] + "Z" // ISO format without milliseconds
+
+        };
+        
+        // Update server
+        fetch('/api/observations/' + sympId + '/', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Token ' + token
+          },
+          body: JSON.stringify(data)
+        })
+        .then(function(response) {
+          if (!response.ok) throw new Error('Failed to update');
+          return response;
+        })
+        .then(function() {
+          getObservations(); //successful
+        })
+        .catch(function(error) {
+          alert('Error updating symptom');
+          getObservations();
+        });
+      };
+    }
+  }
+}
+
+
+// When symptom button gets clicked
+function logSymptom(symptomType) {
+  currentSymptom = symptomType;
+
+  var title = 'Log Symptom';
+  if (symptomMap[symptomType]) {
+    title = symptomMap[symptomType].display;
+  }
+  document.getElementById('modalSymptomName').textContent = title;
+
+  // Reset the slider to 5 as default val
+  document.getElementById('severityInput').value = 5;
+  document.getElementById('severityValue').textContent = 5;
+
+  symptomModal.show();
+}
+
+// Save
+function saveSymptom() {
+  if (!token || !currentPatientId) {
+    alert('Not logged in. Please refresh the page.');
+    return;
+  }
+
+  // Gets symptom information
+  var symptomType = currentSymptom;
+  var symptomCode, symptomDisplay;
+
+  if (symptomMap[symptomType]) {
+    symptomCode = symptomMap[symptomType].code;
+    symptomDisplay = symptomMap[symptomType].display;
+  } else {
+    alert('Invalid symptom type: ' + symptomType);
+    return;
+  }
+
+  // Gets severity from the slider tool
+  var severity = document.getElementById('severityInput').value;
+
+  // create observation record
+  var observationData = {
+    status: 'final',
+    category: 'vital-signs',
+    code: symptomCode,            
+    code_display: symptomDisplay,   
+    value_quantity: parseFloat(severity), 
+    value_unit: '1-10',          
+    effective_date_time: new Date().toISOString().split('.')[0] + "Z"
+  };
+
+  console.log('Saving symptom with data:', observationData);
+  document.getElementById('loading').style.display = 'block';
+
+  // Send the data to the server
+  fetch('/api/observations/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Token ' + token
+    },
+    body: JSON.stringify(observationData)
+  })
+  .then(function(response) {
+    console.log('Response status:', response.status);
+    if (!response.ok) {
+      return response.text().then(text => {
+        console.error('Error response body:', text);
+        throw new Error('Failed to save observation: ' + response.status);
+      });
+    }
+    return response;
+  })
+  .then(function() {
+    alert('Symptom logged successfully!');
+    symptomModal.hide();
+    
+    getObservations();
+  })
+  .catch(function(error) {
+    alert('Error saving symptom: ' + error.message);
+    console.error('Error details:', error);
+  })
+  .finally(function() {
+    document.getElementById('loading').style.display = 'none';
+  });
+}
+</script>
+</body>
+</html>

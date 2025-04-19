@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Processing Login - Postpartum Health</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f5f5f5;
+        }
+
+        .loading-container {
+            text-align: center;
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .message {
+            color: #333;
+            margin-bottom: 1rem;
+        }
+
+        .error {
+            color: #d32f2f;
+            margin-top: 1rem;
+        }
+
+        .debug {
+            margin-top: 2rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.9rem;
+            text-align: left;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .debug-item {
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="loading-container">
+        <div class="spinner"></div>
+        <div class="message">Processing your login...</div>
+        <div id="error" class="error"></div>
+        <div class="debug">
+            <div class="debug-item">Full URL: <span id="full-url"></span></div>
+            <div class="debug-item">Authorization Code: <span id="auth-code"></span></div>
+            <div class="debug-item">Response Status: <span id="response-status"></span></div>
+            <div class="debug-item">Response Data: <span id="response-data"></span></div>
+        </div>
+    </div>
+
+    {% csrf_token %}
+
+    <script>
+        // csrf token 
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        console.log('CSRF Token:', csrfToken);  // Debug log
+
+        // url auth code
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        const error = urlParams.get('error');
+
+        // debug info
+        document.getElementById('full-url').textContent = window.location.href;
+        document.getElementById('auth-code').textContent = code || 'Not found';
+
+        if (error) {
+            document.getElementById('error').textContent = `Error: ${error}`;
+            return;
+        }
+
+        if (!code) {
+            document.getElementById('error').textContent = 'No authorization code received';
+            return;
+        }
+
+        console.log('Sending code to backend:', code);  // Debug log
+
+        // Sends auth code
+        fetch('/api/auth/google/callback/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({
+                code: code
+            })
+        })
+            .then(response => {
+                console.log('Response status:', response.status);  // Debug log
+                document.getElementById('response-status').textContent = response.status;
+                return response.json();
+            })
+            .then(data => {
+                console.log('Response data:', data);  // Debug log
+                document.getElementById('response-data').textContent = JSON.stringify(data, null, 2);
+
+                if (data.status === 'success') {
+                    // Redirect to dashboard or home page
+                    window.location.href = '/api/patients/';
+                } else {
+                    document.getElementById('error').textContent = data.message || 'Login failed';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);  // Debug log
+                document.getElementById('error').textContent = `Error: ${error.message}`;
+            });
+    </script>
+</body>
+
+</html>
