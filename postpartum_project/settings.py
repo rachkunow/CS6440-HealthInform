@@ -98,7 +98,7 @@ if 'DATABASE_URL' in os.environ:
            conn_health_checks=True,
        )
 
- if not DEBUG:
+if not DEBUG:
        SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
        SECURE_SSL_REDIRECT = True
        SESSION_COOKIE_SECURE = True
