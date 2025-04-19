@@ -83,22 +83,19 @@ WSGI_APPLICATION = 'postpartum_project.wsgi.application'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postpartum_health',
-        'USER': 'postgres',
-        'PASSWORD': '',
-        'HOST': 'localhost',
-        'PORT': '5432',
-    }
+   'default': dj_database_url.config(
+        default='postgresql://postgres:@localhost:5432/postpartum_health',
+        conn_max_age=600,
+        conn_health_checks=True,
+    )
 }
-DATABASE_URL = os.getenv('DATABASE_URL')
-if 'DATABASE_URL' in os.environ:
-       DATABASES['default'] = dj_database_url.config(
-           default=DATABASE_URL,
-           conn_max_age=600,
-           conn_health_checks=True,
-       )
+#DATABASE_URL = os.getenv('DATABASE_URL')
+#if 'DATABASE_URL' in os.environ:
+#       DATABASES['default'] = dj_database_url.config(
+#           default=DATABASE_URL,
+#           conn_max_age=600,
+#           conn_health_checks=True,
+#       )
 
 if not DEBUG:
        SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
