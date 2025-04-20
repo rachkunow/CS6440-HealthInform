@@ -51,21 +51,12 @@ def google_login(request):
     )
     return redirect(google_auth_url)
 
-# handles google callback
-@csrf_exempt
-def google_oauth_callback(request):
-    if request.method != 'POST': # POST requests only
-        return JsonResponse({'status': 'error', 'message': 'Only POST is allowed'}, status=405)
+def google_callback_view(request):
+    code = request.GET.get('code')
+    if not code:
+        return redirect('/api/login/')
     
     try:
-        # get code
-        data = json.loads(request.body)
-        code = data.get('code')
-        
-        if not code:
-            return JsonResponse({'status': 'error', 'message': 'No code provided'}, status=400)
-            
-        # Get OAuth settings, either from settings or directly from environment variables
         client_id = getattr(settings, 'GOOGLE_OAUTH2_CLIENT_ID', os.environ.get('GOOGLE_OAUTH2_CLIENT_ID', ''))
         client_secret = getattr(settings, 'GOOGLE_OAUTH2_CLIENT_SECRET', os.environ.get('GOOGLE_OAUTH2_CLIENT_SECRET', ''))
         redirect_uri = getattr(settings, 'GOOGLE_OAUTH2_REDIRECT_URI', os.environ.get('GOOGLE_OAUTH2_REDIRECT_URI', 'https://cs6440-healthinform.onrender.com/api/accounts/google/login/callback/'))
@@ -84,7 +75,7 @@ def google_oauth_callback(request):
         token_response = requests.post(token_url, data=token_data)
         
         if token_response.status_code != 200:
-            return JsonResponse({'status': 'error', 'message': 'Failed to get token'}, status=400)
+            return redirect('/api/login/')
         
         token_info = token_response.json()
         id_token = token_info.get('id_token')
@@ -127,33 +118,10 @@ def google_oauth_callback(request):
         token, created = Token.objects.get_or_create(user=user)
         login(request, user)
         
-        return JsonResponse({
-            'status': 'success',
-            'token': token.key
-        })
-        
+        return redirect(f'/api/test/?token={token.key}')
     except Exception as e:
-        # if anything goes wrong, return an error
-        print(f"Error in google_oauth_callback: {str(e)}")
-        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
-
-# this handles redirect from google
-def google_callback_view(request):
-    code = request.GET.get('code')
-    if not code:
+        print(f"Error in google_callback_view: {str(e)}")
         return redirect('/api/login/')
-    
-    response = requests.post(
-        request.build_absolute_uri('/api/auth/google/callback/'),
-        json={'code': code}
-    )
-    
-    if response.status_code == 200:
-        data = response.json()
-        if data.get('status') == 'success':
-            return redirect(f'/api/test/?token={data.get("token")}')
-    
-    return redirect('/api/login/')
 
 # API for patient data
 class PatientViewSet(viewsets.ModelViewSet):

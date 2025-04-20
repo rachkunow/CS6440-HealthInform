@@ -13,7 +13,6 @@ router.register(r'questionnaire-responses', views.QuestionnaireResponseViewSet, 
 urlpatterns = [
     path('', include(router.urls)),
     # auth routes
-    path('auth/google/callback/', views.google_oauth_callback, name='google_oauth_callback'),
     path('auth/login/', views.token_login, name='token_login'),
     path('login/', views.login_view, name='login'),
     path('google/login/', views.google_login, name='google_login'),
