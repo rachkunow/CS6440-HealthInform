@@ -218,4 +218,6 @@ CSRF_EXEMPT_URLS = [
 try:
     from .oauth_settings import *
 except ImportError:
-    pass
+    GOOGLE_OAUTH2_CLIENT_ID = os.environ.get('GOOGLE_OAUTH2_CLIENT_ID', '')
+    GOOGLE_OAUTH2_CLIENT_SECRET = os.environ.get('GOOGLE_OAUTH2_CLIENT_SECRET', '')
+    GOOGLE_OAUTH2_REDIRECT_URI = os.environ.get('GOOGLE_OAUTH2_REDIRECT_URI', 'https://cs6440-healthinform.onrender.com/api/accounts/google/login/callback/')
