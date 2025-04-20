@@ -17,6 +17,7 @@ import requests
 from datetime import date, datetime
 from django.utils import timezone
 from rest_framework.authtoken.models import Token
+import os
 
 # Create your views here.
 
@@ -35,12 +36,16 @@ def google_login(request):
     nonce = secrets.token_urlsafe(16)
     request.session['oauth_nonce'] = nonce
     
+    # from settings or from env variables
+    client_id = getattr(settings, 'GOOGLE_OAUTH2_CLIENT_ID', os.environ.get('GOOGLE_OAUTH2_CLIENT_ID', ''))
+    redirect_uri = getattr(settings, 'GOOGLE_OAUTH2_REDIRECT_URI', os.environ.get('GOOGLE_OAUTH2_REDIRECT_URI', 'https://cs6440-healthinform.onrender.com/api/accounts/google/login/callback/'))
+    
     # builds google url with app
     google_auth_url = (
         'https://accounts.google.com/o/oauth2/v2/auth' +
-        '?client_id=' + settings.GOOGLE_OAUTH2_CLIENT_ID +
+        '?client_id=' + client_id +
         '&response_type=code' +
-        '&redirect_uri=' + settings.GOOGLE_OAUTH2_REDIRECT_URI +
+        '&redirect_uri=' + redirect_uri +
         '&scope=email profile openid' +
         '&nonce=' + nonce
     )
@@ -59,14 +64,19 @@ def google_oauth_callback(request):
         
         if not code:
             return JsonResponse({'status': 'error', 'message': 'No code provided'}, status=400)
+            
+        # Get OAuth settings, either from settings or directly from environment variables
+        client_id = getattr(settings, 'GOOGLE_OAUTH2_CLIENT_ID', os.environ.get('GOOGLE_OAUTH2_CLIENT_ID', ''))
+        client_secret = getattr(settings, 'GOOGLE_OAUTH2_CLIENT_SECRET', os.environ.get('GOOGLE_OAUTH2_CLIENT_SECRET', ''))
+        redirect_uri = getattr(settings, 'GOOGLE_OAUTH2_REDIRECT_URI', os.environ.get('GOOGLE_OAUTH2_REDIRECT_URI', 'https://cs6440-healthinform.onrender.com/api/accounts/google/login/callback/'))
 
         # get token  
         token_url = 'https://oauth2.googleapis.com/token'
         token_data = {
             'code': code,
-            'client_id': settings.GOOGLE_OAUTH2_CLIENT_ID,
-            'client_secret': settings.GOOGLE_OAUTH2_CLIENT_SECRET,
-            'redirect_uri': settings.GOOGLE_OAUTH2_REDIRECT_URI,
+            'client_id': client_id,
+            'client_secret': client_secret,
+            'redirect_uri': redirect_uri,
             'grant_type': 'authorization_code'
         }
         
