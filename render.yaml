@@ -10,7 +10,7 @@ services:
     name: postpartum-health
     runtime: python
     buildCommand: "./build.sh"
-    startCommand: "gunicorn postpartum_project.wsgi:application"
+    startCommand: "gunicorn postpartum_project.wsgi:application --log-file -"
     envVars:
       - key: DATABASE_URL
         fromDatabase:
