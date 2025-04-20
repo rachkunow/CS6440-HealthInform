@@ -82,20 +82,24 @@ WSGI_APPLICATION = 'postpartum_project.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-DATABASES = {
-   'default': dj_database_url.config(
-        default='postgresql://postgres:@localhost:5432/postpartum_health',
-        conn_max_age=600,
-        conn_health_checks=True,
-    )
-}
-#DATABASE_URL = os.getenv('DATABASE_URL')
-#if 'DATABASE_URL' in os.environ:
-#       DATABASES['default'] = dj_database_url.config(
-#           default=DATABASE_URL,
-#           conn_max_age=600,
-#           conn_health_checks=True,
-#       )
+# In production w Render use the DATABASE_URL
+if 'RENDER' in os.environ:
+    DATABASES = {
+        'default': dj_database_url.config(
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
+    }
+    if not os.environ.get('DATABASE_URL'):
+        raise Exception("DATABASE_URL environment variable not set")
+else:
+    DATABASES = {
+        'default': dj_database_url.config(
+            default='postgresql://postgres:@localhost:5432/postpartum_health',
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
+    }
 
 if not DEBUG:
        SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
@@ -174,6 +178,7 @@ REST_FRAMEWORK = {
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "https://*.onrender.com",  # Add Render domains
 ]
 
 CORS_ALLOW_CREDENTIALS = True
@@ -188,7 +193,11 @@ SESSION_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_SECURE = False  # Set to True in production with HTTPS
 CSRF_COOKIE_HTTPONLY = True
 CSRF_COOKIE_SAMESITE = 'Lax'
-CSRF_TRUSTED_ORIGINS = ['http://localhost:8000', 'http://127.0.0.1:8000']
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:8000', 
+    'http://127.0.0.1:8000',
+    'https://*.onrender.com'  # Add Render domains
+]
 CSRF_USE_SESSIONS = True
 CSRF_COOKIE_NAME = 'csrftoken'
 
