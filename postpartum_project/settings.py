@@ -213,3 +213,9 @@ CSRF_EXEMPT_URLS = [
     '/api/auth/login/',
     '/api/auth/token/',
 ]
+
+# Import Google OAuth settings
+try:
+    from .oauth_settings import *
+except ImportError:
+    pass

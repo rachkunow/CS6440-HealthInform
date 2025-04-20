@@ -18,8 +18,13 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.shortcuts import redirect
+
+def home_view(request):
+    return redirect('/api/')
 
 urlpatterns = [
+    path('', home_view, name='home'),  # Root URL handler
     path('admin/', admin.site.urls),
     path('o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
     path('api/', include('postpartum_api.urls')),

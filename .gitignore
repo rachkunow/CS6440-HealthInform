@@ -5,6 +5,7 @@ venv/
 
 # Local settings
 postpartum_project/local_settings.py
+postpartum_project/oauth_settings.py
 
 # Cache
 __pycache__/
