@@ -21,7 +21,7 @@ from django.conf.urls.static import static
 from django.shortcuts import redirect
 
 def home_view(request):
-    return redirect('/api/login')
+    return redirect('/api/')
 
 urlpatterns = [
     path('', home_view, name='home'),  # Root URL handler
