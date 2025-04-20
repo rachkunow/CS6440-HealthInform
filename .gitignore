@@ -1,0 +1,18 @@
+# Environment
+.env
+.venv/
+venv/
+
+# Local settings
+postpartum_project/local_settings.py
+
+# Cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Mac
+.DS_Store
+
+# Backup files
+*.save 
