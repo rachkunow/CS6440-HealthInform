@@ -1,0 +1,28 @@
+databases:
+  - name: postpartum_db
+    plan: free
+    databaseName: postpartum_health
+    user: postpartum_user
+
+services:
+  - type: web
+    plan: free
+    name: postpartum-health
+    runtime: python
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn postpartum_project.wsgi:application"
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: postpartum_db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: WEB_CONCURRENCY
+        value: 4
+      - key: RENDER
+        value: "true"
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: DENY 

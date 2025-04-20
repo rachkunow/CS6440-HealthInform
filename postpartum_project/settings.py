@@ -27,6 +27,10 @@ DEBUG = 'RENDER' not in os.environ
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.onrender.com']
 
+# render hostname for allowed hosts
+RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
 
 # Application definition
@@ -82,17 +86,19 @@ WSGI_APPLICATION = 'postpartum_project.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-# In production w Render use the DATABASE_URL
+# use DATABASE_URL for production render
 if 'RENDER' in os.environ:
+    # Running on Render.com, use DATABASE_URL
     DATABASES = {
         'default': dj_database_url.config(
             conn_max_age=600,
             conn_health_checks=True,
         )
     }
-    if not os.environ.get('DATABASE_URL'):
-        raise Exception("DATABASE_URL environment variable not set")
+    # Debug log to help diagnose database connection issues
+    print("Running on Render - Using DATABASE_URL for database connection")
 else:
+    # use PostgreSQL database for local run
     DATABASES = {
         'default': dj_database_url.config(
             default='postgresql://postgres:@localhost:5432/postpartum_health',
@@ -100,6 +106,7 @@ else:
             conn_health_checks=True,
         )
     }
+    print("Running locally - Using local database connection")
 
 if not DEBUG:
        SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
